@@ -38,4 +38,4 @@ GIF created with [LiceCap](http://www.cockos.com/licecap/).
 ## Notes
 
 Describe any challenges encountered while building the app.
-#Had issues  adding 'commons-io' library to Android Studio.In order to overcome the issue performed "Invalidate Cache and Restart"
+*Had issues  adding 'commons-io' library to Android Studio.In order to overcome the issue performed "Invalidate Cache and Restart"
