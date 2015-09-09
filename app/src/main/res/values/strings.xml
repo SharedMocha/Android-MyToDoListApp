@@ -6,5 +6,8 @@
     <string name="new_ToDoItem">Enter New To-Do Item..</string>
     <string name="saveDetails">Save</string>
     <string name="editItem">Edit Item Below ....</string>
+    <string name="editItemDates">Select Priority Date</string>
     <string name="title_activity_edit_item">Edit To-Do Item</string>
+    <string name="save_data">Save</string>
+    <string name="cancel_button">Cancel</string>
 </resources>

@@ -8,13 +8,16 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity {
+//public class MainActivity extends AppCompatActivity implements EditNameDialog.EditNameDialogListener {
+public class MainActivity extends AppCompatActivity implements EditItemFragment.EditNameDialogListener{
+
     //Declare Needed Variables
     public  ArrayList<String> ToDoItemsList;
     public ArrayAdapter<String> ToDoAdapater;
@@ -23,14 +26,16 @@ public class MainActivity extends AppCompatActivity {
     private EditText newItemDetails;
     private final int REQUEST_CODE = 20;
     public int editableitemno;
+    Button editformore;
 
-    ArrayList<DataBaseConnections.ToDOItemListFields> arrayOftodoitems;
+    static ArrayList<DataBaseConnections.ToDOItemListFields> arrayOftodoitems;
     //ArrayList<String> extractedItemList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        //showEditDialog();
         // Call additemtoList Method to add items to ListView
         // Initalize this Array List -or else app crashes.
         ToDoItemsList = new ArrayList<String>();
@@ -50,6 +55,10 @@ public class MainActivity extends AppCompatActivity {
         ToDoMainList = (ListView) findViewById(R.id.todoListView);
         ToDoMainList.setAdapter(adapter);
         newItemDetails = (EditText) findViewById(R.id.enterItem);
+        editformore = (Button) findViewById(R.id.buttontoadddate);
+        ToDoMainList.setItemsCanFocus(false);
+
+
 
         //DataBaseConnections savedbconnection = new DataBaseConnections(MainActivity.this,"null",null,1);
         /**
@@ -62,15 +71,34 @@ public class MainActivity extends AppCompatActivity {
         //addItemstoList();
          */
         //Using Inner Class as it's helpful
+
         ToDoMainList.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
                 //ToDoItemsList.remove(i);
+                //arrayOftodoitems.remove(i);
+                //ToDoMainList.remove(i);
                 arrayOftodoitems.remove(i);
-                adapter.notifyDataSetChanged();
+                //adapterView.remove(arrayOftodoitems.get(i));
+                //adapterView.removeViewAt(i);
+                //adapterView.not
+                //adapter.remove();
+                //adapter.notifyDataSetChanged();
+                //arrayOftodoitems.notify();
+
                 //arrayOftodoitems.remove(i);
                 DataBaseConnections savedbconnection = new DataBaseConnections(MainActivity.this,"null",null,1);
-                savedbconnection.savedatbacktoDB(arrayOftodoitems);
+                  savedbconnection.savedatbacktoDB(arrayOftodoitems);
+
+                //added below method--if not when we try to remve 9after edit) its giving error saying list and adapater is not in sync
+                callAdapter();
+
+
+
+                //--VV IML--Here we need to attach the adapter to LISTVIEW or else we will get no lock exception due to scope changes from activity to activity...Notifydatcahnged on adapter will not work
+                //ToDoMainList.setAdapter(adapter);
+                //dapter.notifyDataSetChanged();
+
                 //writeToFile();
                 //dbconnection.savedatbacktoDB(arrayOftodoitems);
                 //Intent iii = new Intent(MainActivity.this,EditItemActivity.class);
@@ -84,11 +112,22 @@ public class MainActivity extends AppCompatActivity {
        ToDoMainList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
            @Override
            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                String itemdetails = (String) adapterView.getItemAtPosition(i);
-                editableitemno = (int) adapterView.getItemIdAtPosition(i);
-                initiateCalltoActivity(itemdetails,editableitemno);
+               String itemdetails = arrayOftodoitems.get(i).ToDoItemName;
+               String date = arrayOftodoitems.get(i).DateObtained;
+
+
+
+               //Comment below step--use ADAPATERVIEW only when using OOTB ARRAYLIST--If using custom adapater call the arraylist as above
+               //String itemdetails = (String) adapterView.getItemAtPosition(i);
+               //editableitemno = (int) adapterView.getItemIdAtPosition(i);
+               //initiateCalltoActivity(itemdetails,editableitemno);
+               adapter.notifyDataSetChanged();
+
+               onitemClicktoFragment(itemdetails,i,date);
+
            }
        });
+
     }
         // Used to add items to list
     /**
@@ -132,7 +171,7 @@ public class MainActivity extends AppCompatActivity {
     public void addtoTODOList(View view) {
         if (newItemDetails.getText().toString().trim().length() != 0) {
             CustomAdapter adapter = new CustomAdapter(this, arrayOftodoitems);
-            arrayOftodoitems.add(new DataBaseConnections.ToDOItemListFields(newItemDetails.getText().toString(), 0));
+            arrayOftodoitems.add(new DataBaseConnections.ToDOItemListFields(newItemDetails.getText().toString(), 0,""));
             adapter.notifyDataSetChanged();
             //ToDoAdapater.notifyDataSetChanged();
              //ToDoItemsList.add(newItemDetails.getText().toString());
@@ -142,6 +181,7 @@ public class MainActivity extends AppCompatActivity {
             //ToDoMainList
             DataBaseConnections savedbconnection = new DataBaseConnections(MainActivity.this,"null",null,1);
             savedbconnection.savedatbacktoDB(arrayOftodoitems);
+
 
         }else {
             Toast.makeText(this, "No Item to Add", Toast.LENGTH_SHORT).show();
@@ -189,6 +229,7 @@ public class MainActivity extends AppCompatActivity {
     // ActivityOne.java, time to handle the result of the sub-activity
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
         // REQUEST_CODE is defined above
         //Toast.makeText(this,"hi",Toast.LENGTH_SHORT).show();
         if (resultCode == RESULT_OK && requestCode == REQUEST_CODE) {
@@ -209,8 +250,99 @@ public class MainActivity extends AppCompatActivity {
                 ToDoItemsList.remove(editableitemno);
                 ToDoAdapater.notifyDataSetChanged();
             }
+        }else if (resultCode == RESULT_OK && requestCode == 30){
+
+            String EditItemNameObtained = data.getExtras().getString("ItemEditName");
+            //Log.e("1",EditItemNameObtained);
+            String dateobtained = data.getExtras().getString("DateCombined");
+            //Log.e("2",dateobtained);
+            int code = data.getExtras().getInt("ItemtoEdit", 0);
+            //Log.e("3",Integer.toString(code));
+            //Log.e("4", Integer.toString(code));
+            arrayOftodoitems.set(code, new DataBaseConnections.ToDOItemListFields(EditItemNameObtained, code, dateobtained));
+            CustomAdapter adapter = new CustomAdapter(this, arrayOftodoitems);
+            //--VV IML--Here we need to attach the adapter to LISTVIEW or else we will get no lock exception due to scope changes from activity to activity...Notifydatcahnged on adapter will not work
+            ToDoMainList.setAdapter(adapter);
+            adapter.notifyDataSetChanged();
+            DataBaseConnections savedbconnection = new DataBaseConnections(MainActivity.this,"null",null,1);
+            savedbconnection.savedatbacktoDB(arrayOftodoitems);
+            callAdapter();
+
+
+        }
+        else
+        {
+
         }
     }
+    /** This below code is imp as we learn't from it and shows how to launch a simple dialog fragment--
+     * IMP READ : Used intially to leaRn---uncoment this to use EditNameDialog-Learning.java and fragment_edit_name.xml
+
+     public void showEditDialog(){
+        android.support.v4.app.FragmentManager fm = getSupportFragmentManager();
+        LearningEditNameDialog end = LearningEditNameDialog.newInstance("Somessssss Title");
+        end.show(fm, "learning_edit_item_dialog_fragment");
+
+
+
+    }
+     */
+//Calling the Interface Method from EditItemFragment.java
+    public void onitemClicktoFragment(String itemdetails,int editableitemno,String date)
+    {
+        android.support.v4.app.FragmentManager fm = getSupportFragmentManager();
+        //Log.e("tooditemname",itemdetails);
+        //Log.e("id",Integer.toString(editableitemno));
+        //Instansiation and calling--USE THIS -DONT use new and then call the method on top of it...as it didnt work when passing title
+        EditItemFragment eit = EditItemFragment.newInstance("Edit To-Do Item",itemdetails,editableitemno,date);
+        //int passtheclickeditem = editableitemno;
+        //EditItemFragment eit = new EditItemFragment();
+        //eit.newInstance("Edit To-Do Item");
+        eit.show(fm, "edit_item_dialog_fragment");
+
+    }
+
+    @Override
+    public void onFinishEditDialogcontrol(String inputText,int Location,String Date) {
+        //arrayOftodoitems.set(Location, new DataBaseConnections.ToDOItemListFields(inputText, Location));
+        //CustomAdapter adapter = new CustomAdapter(this, arrayOftodoitems);
+        //arrayOftodoitems.add(new DataBaseConnections.ToDOItemListFields("inputText", 2));
+        //arrayOftodoitems.add()
+        //adapter.notifyDataSetChanged();
+        //arrayOftodoitems
+        //arrayOftodoitems.add(new DataBaseConnections.ToDOItemListFields("ppppppppppppppp", 0));
+        arrayOftodoitems.set(Location, new DataBaseConnections.ToDOItemListFields(inputText, Location,Date));
+        CustomAdapter adapter = new CustomAdapter(this, arrayOftodoitems);
+        //--VV IML--Here we need to attach the adapter to LISTVIEW or else we will get no lock exception due to scope changes from activity to activity...Notifydatcahnged on adapter will not work
+        ToDoMainList.setAdapter(adapter);
+        adapter.notifyDataSetChanged();
+        //arrayOftodoitems.set(Location,)
+        //arrayOftodoitems.notify();
+        //adapter.notifyDataSetChanged();
+        //ToDoAdapater.notifyDataSetChanged();
+        //ToDoItemsList.add(newItemDetails.getText().toString());
+        //ToDoAdapater.notifyDataSetChanged();
+        //newItemDetails.setText("");
+        //writeToFile();
+        //ToDoMainList
+        DataBaseConnections savedbconnection = new DataBaseConnections(MainActivity.this,"null",null,1);
+        savedbconnection.savedatbacktoDB(arrayOftodoitems);
+
+    }
+
+    public void callAdapter() {
+        CustomAdapter adapter = new CustomAdapter(this, arrayOftodoitems);
+        ToDoMainList.setAdapter(adapter);
+        adapter.notifyDataSetChanged();
+
+
+
+    }
+
+
+
+
+
 
 
 }

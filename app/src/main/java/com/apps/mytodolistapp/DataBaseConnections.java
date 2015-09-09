@@ -27,11 +27,14 @@ public class DataBaseConnections extends SQLiteOpenHelper {
     //Model to use
     public static class ToDOItemListFields {
         public String ToDoItemName;
+        public String DateObtained;
+
         //public int id;
 
-        public  ToDOItemListFields(String todoitems, int index) {
+        public  ToDOItemListFields(String todoitems, int index,String dateObtained) {
             this.ToDoItemName = todoitems;
-            //this.id = index;
+            //this.d = index;
+            this.DateObtained = dateObtained;
 
         }
     }
@@ -82,8 +85,6 @@ public class DataBaseConnections extends SQLiteOpenHelper {
          String rawSQL = "SELECT * FROM ToDOItemList";
         //CursorData = db.rawQuery(rawSQL, null);
         try {
-
-
             /**CursorData = db.query(
                     DB_NAME,  // The table to query
                     ColumnNames,                               // The columns to return
@@ -99,9 +100,14 @@ public class DataBaseConnections extends SQLiteOpenHelper {
                 //ToDOItemListFields todolistItems = new ToDOItemListFields();
                 todoItemListFields = new ArrayList<ToDOItemListFields>();
                 for (CursorData.moveToFirst(); !CursorData.isAfterLast(); CursorData.moveToNext()) {
-                    String todoitem = CursorData.getString(CursorData.getColumnIndex(Column_Name1)).toString();
+                    String todoitem = CursorData.getString(CursorData.getColumnIndex(Column_Name1));
                     int indexno = CursorData.getInt(CursorData.getColumnIndex(Column_Name4));
-                    todoItemListFields.add(new ToDOItemListFields(todoitem, indexno));
+                    String datetopass = CursorData.getString(CursorData.getColumnIndex(Column_Name2));
+                    //String todoitem = CursorData.getString(CursorData.getColumnIndex(Column_Name1)).toString();
+                    //int indexno = CursorData.getInt(CursorData.getColumnIndex(Column_Name4));
+                    //String datetopass = CursorData.getString(CursorData.getColumnIndex(Column_Name2)).toString();
+
+                    todoItemListFields.add(new ToDOItemListFields(todoitem, indexno,datetopass));
                     db.close();
                 }
                 return todoItemListFields;
@@ -110,6 +116,8 @@ public class DataBaseConnections extends SQLiteOpenHelper {
             }
         }catch(Exception e)
         {
+            e.printStackTrace();
+            e.getStackTrace();
             Log.e("READ", "Error while trying to READ post to database");
         }
         /**
@@ -130,13 +138,18 @@ public class DataBaseConnections extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         try {
             cleanData();
+            String[] ColumnNamestosave = {Column_Name1,Column_Name2};
+
             ContentValues values = new ContentValues();
             for (int i = 0; i < todoItemListFields.size(); i++) {
                 ToDOItemListFields pandu = todoItemListFields.get(i);
                 String valuetosave = pandu.ToDoItemName.toString();
+                String date = pandu.DateObtained.toString();
                 values.put("ToDoItem", valuetosave);
+                values.put("DueDate", date);
                 //Log.e("check", valuetosave);
-                 db.insert("ToDOItemList", "ToDoItem", values);
+                 db.insert("ToDOItemList", "ToDoItem,DueDate", values);
+
             }
         }
         catch(Exception e)
